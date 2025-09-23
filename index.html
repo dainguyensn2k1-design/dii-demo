@@ -1,63 +1,187 @@
-async function fetchData() {
-  const response = await fetch(sheetUrl);
-  const data = await response.text();
-  const rows = data.split("\n").slice(1); // bỏ dòng tiêu đề
-
-  let tableBody = "";
-  const labels = [];
-  const temps = [];
-  const hums = [];
-
-  rows.forEach(row => {
-    const cols = row.split(",");
-    if (cols.length >= 3) {
-      const time = cols[0];
-      const temp = parseFloat(cols[1]);
-      const hum = parseFloat(cols[2]);
-
-      tableBody += `<tr><td>${time}</td><td>${temp}</td><td>${hum}</td></tr>`;
-      labels.push(time);
-      temps.push(temp);
-      hums.push(hum);
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Giám sát Nhiệt độ & Độ ẩm</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #121212;
+      color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
     }
-  });
+    h1 {
+      color: #00ffc8;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .latest-box {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #1f1f1f;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,255,200,0.3);
+    }
+    .latest-box span {
+      display: inline-block;
+      margin: 0 15px;
+      font-size: 18px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+    }
+    .table-container, .chart-container {
+      flex: 1;
+      background: #1e1e1e;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      color: #f0f0f0;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: linear-gradient(45deg, #00ffc8, #0088ff);
+      color: black;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background: #2a2a2a;
+    }
+    canvas {
+      height: 400px !important;
+    }
+  </style>
+</head>
+<body>
+  <h1>Giám sát Nhiệt độ & Độ ẩm</h1>
 
-  document.querySelector("#dataTable tbody").innerHTML = tableBody;
+  <!-- Giá trị mới nhất -->
+  <div class="latest-box">
+    <span>⏱️ Thời gian: <b id="latestTime">--</b></span>
+    <span>🌡️ Nhiệt độ: <b id="latestTemp">--</b> °C</span>
+    <span>💧 Độ ẩm: <b id="latestHum">--</b> %</span>
+  </div>
 
-  // Giới hạn chỉ lấy 100 giá trị cuối
-  const maxPoints = 100;
-  const slicedLabels = labels.slice(-maxPoints);
-  const slicedTemps = temps.slice(-maxPoints);
-  const slicedHums = hums.slice(-maxPoints);
+  <div class="container">
+    <!-- Bảng dữ liệu -->
+    <div class="table-container">
+      <h2>Bảng dữ liệu</h2>
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Nhiệt độ (°C)</th>
+            <th>Độ ẩm (%)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
 
-  // Cập nhật giá trị mới nhất (dòng cuối cùng)
-  if (labels.length > 0) {
-    document.getElementById("latestTime").textContent = labels[labels.length - 1];
-    document.getElementById("latestTemp").textContent = temps[temps.length - 1];
-    document.getElementById("latestHum").textContent = hums[labels.length - 1];
-  }
+    <!-- Biểu đồ -->
+    <div class="chart-container">
+      <h2>Biểu đồ (100 giá trị gần nhất)</h2>
+      <canvas id="myChart"></canvas>
+    </div>
+  </div>
 
-  // Vẽ biểu đồ
-  const ctx = document.getElementById("myChart").getContext("2d");
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: slicedLabels,
-      datasets: [
-        {
-          label: "Nhiệt độ (°C)",
-          data: slicedTemps,
-          borderColor: "red",
-          fill: false
-        },
-        {
-          label: "Độ ẩm (%)",
-          data: slicedHums,
-          borderColor: "blue",
-          fill: false
+  <script>
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9vUgV4dRIuiRvhodbnCHRjjJRhzANiXZ_9f7GzwdZvrhMFPFCiBim7KhrGCQzyBzNxs6Q0C2fMjAF/pub?output=csv";
+
+    async function fetchData() {
+      const response = await fetch(sheetUrl);
+      const data = await response.text();
+      const rows = data.split("\n").slice(1); // bỏ dòng tiêu đề
+
+      let tableBody = "";
+      const labels = [];
+      const temps = [];
+      const hums = [];
+
+      rows.forEach(row => {
+        const cols = row.split(",");
+        if (cols.length >= 3) {
+          const time = cols[0];
+          const temp = parseFloat(cols[1]);
+          const hum = parseFloat(cols[2]);
+
+          tableBody += `<tr><td>${time}</td><td>${temp}</td><td>${hum}</td></tr>`;
+          labels.push(time);
+          temps.push(temp);
+          hums.push(hum);
         }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
+      });
+
+      document.querySelector("#dataTable tbody").innerHTML = tableBody;
+
+      // Giới hạn chỉ lấy 100 giá trị cuối
+      const maxPoints = 100;
+      const slicedLabels = labels.slice(-maxPoints);
+      const slicedTemps = temps.slice(-maxPoints);
+      const slicedHums = hums.slice(-maxPoints);
+
+      // Cập nhật giá trị mới nhất (dòng cuối cùng)
+      if (labels.length > 0) {
+        document.getElementById("latestTime").textContent = labels[labels.length - 1];
+        document.getElementById("latestTemp").textContent = temps[temps.length - 1];
+        document.getElementById("latestHum").textContent = hums[hums.length - 1];
+      }
+
+      // Vẽ biểu đồ với màu sắc đẹp hơn
+      const ctx = document.getElementById("myChart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: slicedLabels,
+          datasets: [
+            {
+              label: "🌡️ Nhiệt độ (°C)",
+              data: slicedTemps,
+              borderColor: "orange",
+              backgroundColor: "rgba(255,165,0,0.2)",
+              borderWidth: 2,
+              tension: 0.3,
+              pointRadius: 2
+            },
+            {
+              label: "💧 Độ ẩm (%)",
+              data: slicedHums,
+              borderColor: "#00bfff",
+              backgroundColor: "rgba(0,191,255,0.2)",
+              borderWidth: 2,
+              tension: 0.3,
+              pointRadius: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: "#f0f0f0" } }
+          },
+          scales: {
+            x: { ticks: { color: "#f0f0f0" } },
+            y: { ticks: { color: "#f0f0f0" } }
+          }
+        }
+      });
+    }
+
+    fetchData();
+    setInterval(fetchData, 30000); // Cập nhật mỗi 30 giây
+  </script>
+</body>
+</html>
