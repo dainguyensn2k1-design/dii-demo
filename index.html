@@ -2,114 +2,44 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Giám sát Nhiệt độ & Độ ẩm</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>Trang web của tôi</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
-    h2 { text-align: center; }
-    .latest { background: #fff; padding: 15px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .container { display: flex; gap: 20px; }
-    .table-container, .chart-container {
-      flex: 1; background: #fff; padding: 15px; border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-x: auto;
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #2193b0, #6dd5ed);
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      color: white;
     }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-    th { background: #007bff; color: #fff; }
+    header {
+      padding: 40px 20px;
+    }
+    section {
+      padding: 30px;
+    }
+    button {
+      padding: 12px 24px;
+      margin-top: 20px;
+      background: #ff9800;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #e68900;
+    }
   </style>
 </head>
 <body>
-  <h2>📊 Giám sát Nhiệt độ & Độ ẩm</h2>
-
-  <!-- Bảng trên cùng: giá trị mới nhất -->
-  <div class="latest" id="latest">
-    <h3>🔄 Giá trị cập nhật gần nhất</h3>
-    <p>Nhiệt độ: <span id="latestTemp">--</span> °C</p>
-    <p>Độ ẩm: <span id="latestHum">--</span> %</p>
-    <p>Thời gian: <span id="latestTime">--</span></p>
-  </div>
-
-  <div class="container">
-    <!-- Bảng dữ liệu -->
-    <div class="table-container">
-      <h3>📋 Bảng dữ liệu</h3>
-      <table id="dataTable">
-        <thead>
-          <tr><th>Thời gian</th><th>Nhiệt độ (°C)</th><th>Độ ẩm (%)</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <!-- Biểu đồ -->
-    <div class="chart-container">
-      <h3>📈 Biểu đồ</h3>
-      <canvas id="myChart"></canvas>
-    </div>
-  </div>
-
-  <script>
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9vUgV4dRIuiRvhodbnCHRjjJRhzANiXZ_9f7GzwdZvrhMFPFCiBim7KhrGCQzyBzNxs6Q0C2fMjAF/pub?gid=0&single=true&output=csv";
-
-    async function fetchData() {
-      const response = await fetch(sheetUrl);
-      const data = await response.text();
-      const rows = data.split("\n").slice(1); // bỏ dòng tiêu đề
-
-      let tableBody = "";
-      const labels = [];
-      const temps = [];
-      const hums = [];
-
-      rows.forEach(row => {
-        const cols = row.split(",");
-        if (cols.length >= 3) {
-          const time = cols[0];
-          const temp = parseFloat(cols[1]);
-          const hum = parseFloat(cols[2]);
-
-          tableBody += `<tr><td>${time}</td><td>${temp}</td><td>${hum}</td></tr>`;
-          labels.push(time);
-          temps.push(temp);
-          hums.push(hum);
-        }
-      });
-
-      document.querySelector("#dataTable tbody").innerHTML = tableBody;
-
-      // Cập nhật giá trị mới nhất (dòng cuối cùng)
-      if (labels.length > 0) {
-        document.getElementById("latestTime").textContent = labels[labels.length - 1];
-        document.getElementById("latestTemp").textContent = temps[temps.length - 1];
-        document.getElementById("latestHum").textContent = hums[hums.length - 1];
-      }
-
-      // Vẽ biểu đồ
-      const ctx = document.getElementById("myChart").getContext("2d");
-      new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: "Nhiệt độ (°C)",
-              data: temps,
-              borderColor: "red",
-              fill: false
-            },
-            {
-              label: "Độ ẩm (%)",
-              data: hums,
-              borderColor: "blue",
-              fill: false
-            }
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
-
-    fetchData();
-  </script>
+  <header>
+    <h1>Xin chào! Đây là trang web riêng của tôi 🎉</h1>
+  </header>
+  <section>
+    <p>Tôi có thể giới thiệu bản thân, cửa hàng, hoặc dịch vụ tại đây.</p>
+    <button onclick="alert('Cảm ơn bạn đã ghé thăm!')">Bấm vào đây</button>
+  </section>
 </body>
 </html>
