@@ -2,38 +2,76 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Trang web đầu tiên</title>
+  <title>Dữ liệu ESP32 từ Google Sheets</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #ff7e5f, #feb47b);
-      color: white;
+      background: #1e1e1e;
+      color: #f0f0f0;
       text-align: center;
-      margin: 0;
-      padding: 0;
+      padding: 20px;
     }
-    header {
-      padding: 40px;
+    h1 {
+      color: #00ffcc;
     }
-    button {
-      padding: 10px 20px;
-      background: #2196f3;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
+    table {
+      margin: auto;
+      border-collapse: collapse;
+      width: 80%;
+      background: #2e2e2e;
     }
-    button:hover {
-      background: #0b7dda;
+    th, td {
+      border: 1px solid #444;
+      padding: 10px;
+    }
+    th {
+      background: #00ffcc;
+      color: black;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Xin chào 👋 Đây là web đầu tiên của tôi!</h1>
-    <p>Được viết bằng VS Code và publish bằng GitHub Pages 🚀</p>
-    <button onclick="alert('Cảm ơn bạn đã ghé thăm!')">Bấm vào đây</button>
-  </header>
+  <h1>Dữ liệu ESP32</h1>
+  <p>Cập nhật từ Google Sheets</p>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Thời gian</th>
+        <th>Nhiệt độ (°C)</th>
+        <th>Độ ẩm (%)</th>
+        <th>Dòng điện (A)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9vUgV4dRIuiRvhodbnCHRjjJRhzANiXZ_9f7GzwdZvrhMFPFCiBim7KhrGCQzyBzNxs6Q0C2fMjAF/pub?gid=0&single=true&output=csv";
+
+    async function loadData() {
+      const response = await fetch(sheetURL);
+      const data = await response.text();
+      const rows = data.split("\n").slice(1); // bỏ dòng tiêu đề
+      const tableBody = document.querySelector("#dataTable tbody");
+      tableBody.innerHTML = "";
+
+      rows.forEach(row => {
+        const cols = row.split(",");
+        if (cols.length >= 3) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${cols[0]}</td>
+            <td>${cols[1]}</td>
+            <td>${cols[2]}</td>
+            <td>${cols[3] || "-"}</td>
+          `;
+          tableBody.appendChild(tr);
+        }
+      });
+    }
+
+    loadData();
+    setInterval(loadData, 5000); // cập nhật mỗi 5 giây
+  </script>
 </body>
 </html>
