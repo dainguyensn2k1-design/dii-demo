@@ -2,79 +2,64 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Dữ liệu ESP32 từ Google Sheets</title>
+  <title>Giám sát Nhiệt độ & Độ ẩm</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #1e1e1e;
-      color: #f0f0f0;
-      text-align: center;
-      padding: 20px;
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
+    h2 { text-align: center; }
+    .latest { background: #fff; padding: 15px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .container { display: flex; gap: 20px; }
+    .table-container, .chart-container {
+      flex: 1; background: #fff; padding: 15px; border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-x: auto;
     }
-    h1 {
-      color: #00ffcc;
-    }
-    table {
-      margin: auto;
-      border-collapse: collapse;
-      width: 80%;
-      background: #2e2e2e;
-      margin-bottom: 30px;
-    }
-    th, td {
-      border: 1px solid #444;
-      padding: 10px;
-    }
-    th {
-      background: #00ffcc;
-      color: black;
-    }
-    tr:nth-child(even) {
-      background: #3a3a3a;
-    }
-    canvas {
-      max-width: 90%;
-      margin: auto;
-      background: #fff;
-      border-radius: 10px;
-      padding: 10px;
-    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background: #007bff; color: #fff; }
   </style>
 </head>
 <body>
-  <h1>Dữ liệu ESP32</h1>
-  <p>Cập nhật từ Google Sheets</p>
+  <h2>📊 Giám sát Nhiệt độ & Độ ẩm</h2>
 
-  <!-- Bảng dữ liệu -->
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>Thời gian</th>
-        <th>Nhiệt độ (°C)</th>
-        <th>Độ ẩm (%)</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <!-- Bảng trên cùng: giá trị mới nhất -->
+  <div class="latest" id="latest">
+    <h3>🔄 Giá trị cập nhật gần nhất</h3>
+    <p>Nhiệt độ: <span id="latestTemp">--</span> °C</p>
+    <p>Độ ẩm: <span id="latestHum">--</span> %</p>
+    <p>Thời gian: <span id="latestTime">--</span></p>
+  </div>
 
-  <!-- Biểu đồ -->
-  <canvas id="myChart"></canvas>
+  <div class="container">
+    <!-- Bảng dữ liệu -->
+    <div class="table-container">
+      <h3>📋 Bảng dữ liệu</h3>
+      <table id="dataTable">
+        <thead>
+          <tr><th>Thời gian</th><th>Nhiệt độ (°C)</th><th>Độ ẩm (%)</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Biểu đồ -->
+    <div class="chart-container">
+      <h3>📈 Biểu đồ</h3>
+      <canvas id="myChart"></canvas>
+    </div>
+  </div>
 
   <script>
-    // Thay link này bằng link CSV Google Sheets của bạn
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9vUgV4dRIuiRvhodbnCHRjjJRhzANiXZ_9f7GzwdZvrhMFPFCiBim7KhrGCQzyBzNxs6Q0C2fMjAF/pub?gid=0&single=true&output=csv";
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9vUgV4dRIuiRvhodbnCHRjjJRhzANiXZ_9f7GzwdZvrhMFPFCiBim7KhrGCQzyBzNxs6Q0C2fMjAF/pub?gid=0&single=true&output=csv";
 
-    async function loadData() {
-      const response = await fetch(sheetURL);
+    async function fetchData() {
+      const response = await fetch(sheetUrl);
       const data = await response.text();
       const rows = data.split("\n").slice(1); // bỏ dòng tiêu đề
-      const tableBody = document.querySelector("#dataTable tbody");
-      tableBody.innerHTML = "";
 
-      let labels = [];
-      let temps = [];
-      let hums = [];
+      let tableBody = "";
+      const labels = [];
+      const temps = [];
+      const hums = [];
 
       rows.forEach(row => {
         const cols = row.split(",");
@@ -83,17 +68,21 @@
           const temp = parseFloat(cols[1]);
           const hum = parseFloat(cols[2]);
 
-          // Thêm vào bảng
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${time}</td><td>${temp}</td><td>${hum}</td>`;
-          tableBody.appendChild(tr);
-
-          // Thêm vào mảng cho chart
+          tableBody += `<tr><td>${time}</td><td>${temp}</td><td>${hum}</td></tr>`;
           labels.push(time);
           temps.push(temp);
           hums.push(hum);
         }
       });
+
+      document.querySelector("#dataTable tbody").innerHTML = tableBody;
+
+      // Cập nhật giá trị mới nhất (dòng cuối cùng)
+      if (labels.length > 0) {
+        document.getElementById("latestTime").textContent = labels[labels.length - 1];
+        document.getElementById("latestTemp").textContent = temps[temps.length - 1];
+        document.getElementById("latestHum").textContent = hums[hums.length - 1];
+      }
 
       // Vẽ biểu đồ
       const ctx = document.getElementById("myChart").getContext("2d");
@@ -116,22 +105,11 @@
             }
           ]
         },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { labels: { color: "black" } }
-          },
-          scales: {
-            x: { ticks: { color: "black" } },
-            y: { ticks: { color: "black" } }
-          }
-        }
+        options: { responsive: true, maintainAspectRatio: false }
       });
     }
 
-    loadData();
-    setInterval(loadData, 10000); // Cập nhật mỗi 10 giây
+    fetchData();
   </script>
 </body>
 </html>
-S
