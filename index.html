@@ -2,7 +2,8 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Bảng Nhiệt độ & Độ ẩm</title>
+  <title>Dữ liệu ESP32 từ Google Sheets</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -19,7 +20,7 @@
       border-collapse: collapse;
       width: 80%;
       background: #2e2e2e;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      margin-bottom: 30px;
     }
     th, td {
       border: 1px solid #444;
@@ -32,12 +33,20 @@
     tr:nth-child(even) {
       background: #3a3a3a;
     }
+    canvas {
+      max-width: 90%;
+      margin: auto;
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>Dữ liệu Nhiệt độ & Độ ẩm</h1>
-  <p>Theo từng giờ trong ngày</p>
+  <h1>Dữ liệu ESP32</h1>
+  <p>Cập nhật từ Google Sheets</p>
 
+  <!-- Bảng dữ liệu -->
   <table id="dataTable">
     <thead>
       <tr>
@@ -49,42 +58,80 @@
     <tbody></tbody>
   </table>
 
+  <!-- Biểu đồ -->
+  <canvas id="myChart"></canvas>
+
   <script>
-    // Dữ liệu mẫu
-    const data = [
-      ["00:00", 25.1, 82],
-      ["01:00", 24.9, 84],
-      ["02:00", 24.7, 85],
-      ["03:00", 24.5, 86],
-      ["04:00", 24.4, 87],
-      ["05:00", 24.6, 86],
-      ["06:00", 25.0, 85],
-      ["07:00", 26.2, 82],
-      ["08:00", 27.8, 78],
-      ["09:00", 29.1, 74],
-      ["10:00", 30.4, 70],
-      ["11:00", 31.2, 68],
-      ["12:00", 32.0, 65],
-      ["13:00", 32.5, 64],
-      ["14:00", 32.7, 63],
-      ["15:00", 32.4, 64],
-      ["16:00", 31.8, 66],
-      ["17:00", 30.7, 70],
-      ["18:00", 29.4, 74],
-      ["19:00", 28.1, 77],
-      ["20:00", 27.2, 80],
-      ["21:00", 26.5, 82],
-      ["22:00", 26.0, 83],
-      ["23:00", 25.6, 84]
-    ];
+    // Thay link này bằng link CSV Google Sheets của bạn
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9vUgV4dRIuiRvhodbnCHRjjJRhzANiXZ_9f7GzwdZvrhMFPFCiBim7KhrGCQzyBzNxs6Q0C2fMjAF/pub?gid=0&single=true&output=csv";
 
-    const tableBody = document.querySelector("#dataTable tbody");
+    async function loadData() {
+      const response = await fetch(sheetURL);
+      const data = await response.text();
+      const rows = data.split("\n").slice(1); // bỏ dòng tiêu đề
+      const tableBody = document.querySelector("#dataTable tbody");
+      tableBody.innerHTML = "";
 
-    data.forEach(row => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td>`;
-      tableBody.appendChild(tr);
-    });
+      let labels = [];
+      let temps = [];
+      let hums = [];
+
+      rows.forEach(row => {
+        const cols = row.split(",");
+        if (cols.length >= 3) {
+          const time = cols[0];
+          const temp = parseFloat(cols[1]);
+          const hum = parseFloat(cols[2]);
+
+          // Thêm vào bảng
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${time}</td><td>${temp}</td><td>${hum}</td>`;
+          tableBody.appendChild(tr);
+
+          // Thêm vào mảng cho chart
+          labels.push(time);
+          temps.push(temp);
+          hums.push(hum);
+        }
+      });
+
+      // Vẽ biểu đồ
+      const ctx = document.getElementById("myChart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Nhiệt độ (°C)",
+              data: temps,
+              borderColor: "red",
+              fill: false
+            },
+            {
+              label: "Độ ẩm (%)",
+              data: hums,
+              borderColor: "blue",
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { labels: { color: "black" } }
+          },
+          scales: {
+            x: { ticks: { color: "black" } },
+            y: { ticks: { color: "black" } }
+          }
+        }
+      });
+    }
+
+    loadData();
+    setInterval(loadData, 10000); // Cập nhật mỗi 10 giây
   </script>
 </body>
 </html>
+S
