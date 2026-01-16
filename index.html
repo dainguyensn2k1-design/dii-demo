@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>ESP8266 Public IP</title>
+  <title>ESP8266 Redirect</title>
   <style>
     body {
       font-family: Arial;
@@ -25,20 +25,19 @@
       text-decoration: none;
       word-break: break-all;
     }
-    a:hover {
-      text-decoration: underline;
-    }
   </style>
 </head>
 <body>
 
 <div class="box">
-  <h2>🌍 Public IP</h2>
+  <h2>🌍 ESP8266</h2>
+  <p>Đang chuyển sau <span id="count">5</span> giây...</p>
   <a id="iplink" href="#">Đang tải...</a>
 </div>
 
 <script>
 const PORT = 8880;
+let countdown = 5;
 
 fetch("https://api.jsonbin.io/v3/b/696a6b61d0ea881f40705b39/latest")
   .then(res => res.json())
@@ -49,6 +48,17 @@ fetch("https://api.jsonbin.io/v3/b/696a6b61d0ea881f40705b39/latest")
     const a = document.getElementById("iplink");
     a.href = link;
     a.innerText = link;
+
+    // Đếm ngược
+    const timer = setInterval(() => {
+      countdown--;
+      document.getElementById("count").innerText = countdown;
+
+      if (countdown <= 0) {
+        clearInterval(timer);
+        window.location.href = link; // 🚀 AUTO REDIRECT
+      }
+    }, 1000);
   })
   .catch(err => {
     document.getElementById("iplink").innerText = "Lỗi tải IP";
