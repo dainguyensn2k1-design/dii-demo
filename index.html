@@ -1,16 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Redirecting...</title>
-
-  <!-- Sau 5 giây chuyển sang ESP8266 -->
-  <meta http-equiv="refresh" content="5; url=http://192.168.1.99:8880/">
+<meta charset="utf-8">
+<title>ESP8266 Public IP</title>
+<style>
+body { font-family: Arial; background:#111; color:#0f0; text-align:center; }
+.box { margin-top:50px; font-size:24px; }
+</style>
 </head>
 <body>
 
-<h2>Đang kết nối thiết bị...</h2>
-<p>Vui lòng chờ 5 giây...</p>
+<h2>🌍 IP Public ESP8266</h2>
+<div class="box" id="ip">Đang tải...</div>
+
+<script>
+fetch("https://api.jsonbin.io/v3/b/65abc123456789/latest")
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById("ip").innerText = d.record.ip;
+  });
+</script>
 
 </body>
 </html>
