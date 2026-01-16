@@ -14,7 +14,7 @@ body { font-family: Arial; background:#111; color:#0f0; text-align:center; }
 <div class="box" id="ip">Đang tải...</div>
 
 <script>
-fetch("https://api.jsonbin.io/v3/b/65abc123456789/latest")
+fetch("https://api.jsonbin.io/v3/b/696a6b61d0ea881f40705b39/latest")
   .then(r => r.json())
   .then(d => {
     document.getElementById("ip").innerText = d.record.ip;
