@@ -1,23 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-<meta charset="utf-8">
-<title>ESP8266 Public IP</title>
-<style>
-body { font-family: Arial; background:#111; color:#0f0; text-align:center; }
-.box { margin-top:50px; font-size:24px; }
-</style>
+  <meta charset="UTF-8">
+  <title>ESP8266 Public IP</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0b0b0b;
+      color: #00ff88;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .box {
+      border: 2px solid #00ff88;
+      padding: 20px 30px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    a {
+      color: #00ff88;
+      font-size: 20px;
+      text-decoration: none;
+      word-break: break-all;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
 
-<h2>🌍 IP Public ESP8266</h2>
-<div class="box" id="ip">Đang tải...</div>
+<div class="box">
+  <h2>🌍 Public IP</h2>
+  <a id="iplink" href="#">Đang tải...</a>
+</div>
 
 <script>
+const PORT = 8880;
+
 fetch("https://api.jsonbin.io/v3/b/696a6b61d0ea881f40705b39/latest")
-  .then(r => r.json())
-  .then(d => {
-    document.getElementById("ip").innerText = d.record.ip;
+  .then(res => res.json())
+  .then(data => {
+    const ip = data.record.ip;
+    const link = "http://" + ip + ":" + PORT;
+
+    const a = document.getElementById("iplink");
+    a.href = link;
+    a.innerText = link;
+  })
+  .catch(err => {
+    document.getElementById("iplink").innerText = "Lỗi tải IP";
+    console.error(err);
   });
 </script>
 
