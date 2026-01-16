@@ -3,32 +3,14 @@
 <head>
   <meta charset="utf-8">
   <title>Redirecting...</title>
+
+  <!-- Sau 5 giây chuyển sang ESP8266 -->
+  <meta http-equiv="refresh" content="5; url=http://192.168.1.99:8880/">
 </head>
 <body>
 
 <h2>Đang kết nối thiết bị...</h2>
-<p id="status">Vui lòng chờ 5 giây...</p>
-
-<script>
-const ESP_API = "http://192.168.1.99:8880/redirect"; // IP ESP8266
-let redirectLink = "";
-
-fetch(ESP_API)
-  .then(res => res.text())
-  .then(url => {
-    redirectLink = url;
-    document.getElementById("status").innerText =
-      "Sẽ chuyển đến: " + url;
-
-    setTimeout(() => {
-      window.location.href = redirectLink;
-    }, 5000);
-  })
-  .catch(() => {
-    document.getElementById("status").innerText =
-      "Không kết nối được ESP8266";
-  });
-</script>
+<p>Vui lòng chờ 5 giây...</p>
 
 </body>
 </html>
